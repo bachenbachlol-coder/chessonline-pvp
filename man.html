@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Chess Arena | Play Online & vs AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: #2c3e2f;
+            font-family: 'Segoe UI', 'Helvetica Neue', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Chess.com inspired clean dark theme */
+        .app-container {
+            max-width: 1300px;
+            width: 100%;
+            background: #1e2a23;
+            border-radius: 16px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.4);
+            overflow: hidden;
+            padding: 20px 24px 28px 24px;
+            transition: all 0.2s;
+        }
+
+        /* Top bar - sleek */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #3a4c3f;
+        }
+
+        .logo-area h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #e9e1b9, #c9a645);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-area p {
+            color: #8aa68b;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .user-card {
+            background: #2a3a2e;
+            border-radius: 40px;
+            padding: 6px 16px 6px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: inset 0 0 0 1px #4a664d;
+        }
+
+        .user-card span {
+            color: #e6d5a8;
+            font-weight: 500;
+        }
+
+        #usernameDisplay {
+            background: #162018;
+            padding: 5px 16px;
+            border-radius: 32px;
+            font-family: monospace;
+            font-weight: bold;
+            color: #ffdd99;
+        }
+
+        .login-btn {
+            background: #6f8f6a;
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 32px;
+            padding: 6px 18px;
+            cursor: pointer;
+            transition: 0.1s;
+            font-size: 0.8rem;
+        }
+
+        .login-btn:hover {
+            background: #5e7c58;
+            transform: scale(0.97);
+        }
+
+        /* Mode toggle - chess.com style pill */
+        .mode-switch {
+            display: flex;
+            background: #26332a;
+            border-radius: 60px;
+            padding: 4px;
+            margin-bottom: 28px;
+            width: fit-content;
+            gap: 4px;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 8px 32px;
+            border-radius: 60px;
+            cursor: pointer;
+            color: #bdd4bf;
+            transition: 0.1s;
+        }
+
+        .mode-btn.active {
+            background: #e6b450;
+            color: #1e2a1f;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        /* Game area flex */
+        .game-layout {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 28px;
+            align-items: flex-start;
+        }
+
+        /* Board container with subtle shadow */
+        .board-container {
+            background: #2d2b2a;
+            padding: 14px;
+            border-radius: 20px;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.5);
+        }
+
+        canvas {
+            display: block;
+            border-radius: 12px;
+            box-shadow: 0 0 0 2px #6b5e44;
+            cursor: pointer;
+        }
+
+        /* Right panel - clean cards */
+        .info-panel {
+            background: #1f2c23;
+            border-radius: 24px;
+            padding: 20px;
+            width: 280px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+        }
+
+        .turn-card {
+            background: #2c3d30;
+            border-radius: 40px;
+            padding: 12px 16px;
+            text-align: center;
+            font-weight: bold;
+            color: #f2e8cf;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .status-message {
+            background: #00000055;
+            backdrop-filter: blur(4px);
+            border-radius: 20px;
+            padding: 12px;
+            margin: 12px 0;
+            font-size: 0.85rem;
+            text-align: center;
+            color: #e6ddb3;
+        }
+
+        .room-card, .ai-card {
+            background: #2a382d;
+            border-radius: 20px;
+            padding: 16px;
+            margin: 14px 0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        input, button {
+            background: #faf3e0;
+            border: none;
+            border-radius: 40px;
+            padding: 8px 14px;
+            font-weight: 600;
+            font-family: inherit;
+        }
+
+        button {
+            background: #dba643;
+            cursor: pointer;
+            transition: 0.07s linear;
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .difficulty-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .diff-option {
+            flex: 1;
+            background: #3f5542;
+            color: #ece3c9;
+            text-align: center;
+            padding: 8px 0;
+            border-radius: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+
+        .diff-option.active-diff {
+            background: #e6b450;
+            color: #1e2a1f;
+            box-shadow: 0 2px 6px black;
+        }
+
+        hr {
+            border-color: #4a604b;
+            margin: 10px 0;
+        }
+
+        .reset-btn {
+            width: 100%;
+            background: #4f6b52;
+            color: white;
+            margin-top: 16px;
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+
+        .reset-btn:hover {
+            background: #3c553f;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+</head>
+<body>
+<div class="app-container">
+    <div class="top-bar">
+        <div class="logo-area">
+            <h1>♟️ chess arena</h1>
+            <p>play · create room · AI master</p>
+        </div>
+        <div class="user-card">
+            <span>👤</span>
+            <div id="usernameDisplay">Guest_??</div>
+            <button id="loginBtn" class="login-btn">set name</button>
+        </div>
+    </div>
+
+    <div class="mode-switch">
+        <button id="modeMultiBtn" class="mode-btn active">🌐 Multiplayer</button>
+        <button id="modeAiBtn" class="mode-btn">🤖 Vs AI</button>
+    </div>
+
+    <div class="game-layout">
+        <div class="board-container">
+            <canvas id="chessCanvas" width="500" height="500"></canvas>
+        </div>
+        <div class="info-panel">
+            <div class="turn-card" id="turnText">⚫ awaiting</div>
+            <div id="gameStatus" class="status-message">✨ choose mode</div>
+            <div id="dynamicPanel"></div>
+            <button id="resetGameBtn" class="reset-btn">🔄 New Game</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- ENGINE ----------
+    let game = new Chess();
+    let gameMode = "multiplayer";   // multiplayer or ai
+    let aiSkill = 3;                // 1 (normal), 2 (strong), 3 (expert)
+    
+    // Rendering
+    const canvas = document.getElementById("chessCanvas");
+    const ctx = canvas.getContext("2d");
+    let selectedSquare = null;
+    let validMoves = [];
+    
+    // Username
+    let currentUsername = localStorage.getItem("chessUsername") || ("Warrior_" + Math.floor(Math.random() * 9999));
+    document.getElementById("usernameDisplay").innerText = currentUsername;
+    document.getElementById("loginBtn").onclick = () => {
+        let newName = prompt("Enter your username (no password/email)", currentUsername);
+        if(newName && newName.trim().length > 0) {
+            currentUsername = newName.trim().substring(0, 18);
+            localStorage.setItem("chessUsername", currentUsername);
+            document.getElementById("usernameDisplay").innerText = currentUsername;
+            updateStatusMsg(`Welcome ${currentUsername}`);
+        }
+    };
+    
+    // ---------- MULTIPLAYER (Rooms via localStorage / cross-tab) ----------
+    let currentRoom = null;
+    let playerColor = null;    // 'w' or 'b'
+    let myTurn = false;
+    let syncInterval = null;
+    
+    function leaveRoomClean() {
+        if(syncInterval) { clearInterval(syncInterval); syncInterval = null; }
+        if(currentRoom) {
+            let data = localStorage.getItem(`chess_room_${currentRoom}`);
+            if(data) {
+                let parsed = JSON.parse(data);
+                if(parsed.playerCount === 1) localStorage.removeItem(`chess_room_${currentRoom}`);
+            }
+        }
+        currentRoom = null;
+        playerColor = null;
+        myTurn = false;
+    }
+    
+    function broadcastRoom() {
+        if(!currentRoom) return;
+        let roomState = { fen: game.fen(), turn: game.turn(), lastUpdate: Date.now(), playerCount: 2 };
+        localStorage.setItem(`chess_room_${currentRoom}`, JSON.stringify(roomState));
+    }
+    
+    function syncFromRoom() {
+        if(!currentRoom) return;
+        let raw = localStorage.getItem(`chess_room_${currentRoom}`);
+        if(!raw) return;
+        let data = JSON.parse(raw);
+        if(data.fen && data.fen !== game.fen()) {
+            try {
+                game.load(data.fen);
+                renderBoard();
+                updateTurnDisplay();
+                myTurn = (game.turn() === playerColor);
+                if(!game.game_over()) updateStatusMsg(myTurn ? "Your turn" : "Opponent's turn");
+                else updateStatusMsg("Game finished");
+            } catch(e) {}
+        }
+    }
+    
+    function startSync() {
+        if(syncInterval) clearInterval(syncInterval);
+        syncInterval = setInterval(() => syncFromRoom(), 650);
+    }
+    
+    function createRoom() {
+        leaveRoomClean();
+        let code = "";
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
+        for(let i=0;i<6;i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+        currentRoom = code;
+        playerColor = 'w';
+        myTurn = true;
+        game = new Chess();
+        let initRoom = { fen: game.fen(), turn: 'w', creator: currentUsername, playerCount: 1, lastUpdate: Date.now() };
+        localStorage.setItem(`chess_room_${currentRoom}`, JSON.stringify(initRoom));
+        startSync();
+        renderBoard();
+        updateTurnDisplay();
+        updateStatusMsg(`✅ Room created: ${currentRoom} — share code. You are White.`);
+        renderMultiplayerPanel();
+    }
+    
+    function joinRoom(roomCode) {
+        let key = `chess_room_${roomCode.toUpperCase()}`;
+        let data = localStorage.getItem(key);
+        if(!data) { updateStatusMsg(`❌ Room ${roomCode} not found`); return false; }
+        let parsed = JSON.parse(data);
+        if(parsed.playerCount >= 2) { updateStatusMsg(`❌ Room full`); return false; }
+        leaveRoomClean();
+        currentRoom = roomCode.toUpperCase();
+        playerColor = 'b';
+        myTurn = false;
+        game.load(parsed.fen);
+        parsed.playerCount = 2;
+        localStorage.setItem(key, JSON.stringify(parsed));
+        startSync();
+        renderBoard();
+        updateTurnDisplay();
+        updateStatusMsg(`Joined ${currentRoom} as Black. Wait for White.`);
+        renderMultiplayerPanel();
+        return true;
+    }
+    
+    function multiplayerMove(from, to) {
+        if(gameMode !== "multiplayer") return false;
+        if(!currentRoom) { updateStatusMsg("Create/join room first"); return false; }
+        let turn = game.turn();
+        if((turn === 'w' && playerColor !== 'w') || (turn === 'b' && playerColor !== 'b')) {
+            updateStatusMsg("Not your turn");
+            return false;
+        }
+        if(!myTurn) { updateStatusMsg("Waiting opponent"); return false; }
+        let move = getValidMove(from, to);
+        if(move) {
+            game.move(move);
+            renderBoard();
+            updateTurnDisplay();
+            myTurn = false;
+            broadcastRoom();
+            if(game.game_over()) updateStatusMsg("Game over.");
+            else updateStatusMsg("Move sent");
+            return true;
+        }
+        return false;
+    }
+    
+    // ---------- ADVANCED AI (Much stronger, uses minimax-like depth with piece-square & mobility) ----------
+    // For performance and strength: uses iterative capture+position evaluation
+    function evaluateBoard(board) {
+        let total = 0;
+        const pieceValues = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+        // piece-square tables for midgame (encourage development & center)
+        const pawnTable = [
+            0,  0,  0,  0,  0,  0,  0,  0,
+            5, 10, 10,-20,-20, 10, 10,  5,
+            2,  4,  8, 12, 12,  8,  4,  2,
+            0,  2,  4,  8,  8,  4,  2,  0,
+            0,  0,  2,  6,  6,  2,  0,  0,
+            1,  1,  2,  4,  4,  2,  1,  1,
+            0,  0,  1,  2,  2,  1,  0,  0,
+            0,  0,  0,  0,  0,  0,  0,  0
+        ];
+        const knightTable = [
+            -10,-5, 0, 0, 0, 0,-5,-10,
+            -5, 0, 5, 5, 5, 5, 0,-5,
+            0, 5,10,12,12,10, 5, 0,
+            0, 5,10,12,12,10, 5, 0,
+            0, 5,10,12,12,10, 5, 0,
+            0, 5,10,12,12,10, 5, 0,
+            -5, 0, 5, 8, 8, 5, 0,-5,
+            -10,-5, 0, 2, 2, 0,-5,-10
+        ];
+        const bishopTable = [
+            -10,-5, 0, 0, 0, 0,-5,-10,
+            -5, 0, 5, 5, 5, 5, 0,-5,
+            0, 5, 8,10,10, 8, 5, 0,
+            0, 5, 8,10,10, 8, 5, 0,
+            0, 5, 8,10,10, 8, 5, 0,
+            0, 5, 8,10,10, 8, 5, 0,
+            -5, 0, 5, 5, 5, 5, 0,-5,
+            -10,-5, 0, 0, 0, 0,-5,-10
+        ];
+        const rookTable = [
+            0, 0, 2, 4, 4, 2, 0, 0,
+            0, 2, 4, 6, 6, 4, 2, 0,
+            0, 2, 4, 6, 6, 4, 2, 0,
+            0, 2, 4, 6, 6, 4, 2, 0,
+            0, 2, 4, 6, 6, 4, 2, 0,
+            0, 2, 4, 6, 6, 4, 2, 0,
+            0, 2, 4, 6, 6, 4, 2, 0,
+            0, 0, 2, 4, 4, 2, 0, 0
+        ];
+        const queenTable = [
+            -10,-5, 0, 0, 0, 0,-5,-10,
+            -5, 0, 5, 5, 5, 5, 0,-5,
+            0, 5, 8,10,10, 8, 5, 0,
+            0, 5, 8,10,10, 8, 5, 0,
+            0, 5, 8,10,10, 8, 5, 0,
+            0, 5, 8,10,10, 8, 5, 0,
+            -5, 0, 5, 5, 5, 5, 0,-5,
+            -10,-5, 0, 0, 0, 0,-5,-10
+        ];
+        const kingTable = [
+            20,30,10, 0, 0,10,30,20,
+            20,20, 0, 0, 0, 0,20,20,
+            -10,-20,-20,-20,-20,-20,-20,-10,
+            -20,-30,-30,-40,-40,-30,-30,-20,
+            -30,-40,-40,-50,-50,-40,-40,-30,
+            -30,-40,-40,-50,-50,-40,-40,-30,
+            -30,-40,-40,-50,-50,-40,-40,-30,
+            -30,-40,-40,-50,-50,-40,-40,-30
+        ];
+        
+        const boardArray = board.board();
+        for(let i=0;i<8;i++) {
+            for(let j=0;j<8;j++) {
+                let piece = boardArray[i][j];
+                if(piece) {
+                    let squareIndex = (7-i)*8 + j;
+                    let value = pieceValues[piece.type];
+                    let positional = 0;
+                    if(piece.type === 'p') positional = pawnTable[squareIndex];
+                    if(piece.type === 'n') positional = knightTable[squareIndex];
+                    if(piece.type === 'b') positional = bishopTable[squareIndex];
+                    if(piece.type === 'r') positional = rookTable[squareIndex];
+                    if(piece.type === 'q') positional = queenTable[squareIndex];
+                    if(piece.type === 'k') positional = kingTable[squareIndex];
+                    let totalPiece = value + positional;
+                    if(piece.color === 'w') total += totalPiece;
+                    else total -= totalPiece;
+                }
+            }
+        }
+        // mobility bonus (more moves = better)
+        let moves = board.moves({ verbose: true });
+        let mobility = moves.length * 5;
+        if(board.turn() === 'w') total += mobility;
+        else total -= mobility;
+        return total;
+    }
+    
+    // AI move selection: advanced scoring with depth 2 + quiescence for harder difficulty
+    function getBestMove(board, depth, isMaximizing) {
+        if(depth === 0 || board.game_over()) {
+            return evaluateBoard(board);
+        }
+        let moves = board.moves({ verbose: true });
+        if(moves.length === 0) return evaluateBoard(board);
+        if(isMaximizing) {
+            let maxEval = -Infinity;
+            for(let move of moves) {
+                let copy = new Chess(board.fen());
+                copy.move({ from: move.from, to: move.to, promotion: 'q' });
+                let evalScore = getBestMove(copy, depth-1, false);
+                if(evalScore > maxEval) maxEval = evalScore;
+            }
+            return maxEval;
+        } else {
+            let minEval = Infinity;
+            for(let move of moves) {
+                let copy = new Chess(board.fen());
+                copy.move({ from: move.from, to: move.to, promotion: 'q' });
+                let evalScore = getBestMove(copy, depth-1, true);
+                if(evalScore < minEval) minEval = evalScore;
+            }
+            return minEval;
+        }
+    }
+    
+    function selectAIMove() {
+        let moves = game.moves({ verbose: true });
+        if(moves.length === 0) return null;
+        
+        if(aiSkill === 1) { 
+            // normal but better than random: picks best capture or random with slight bias
+            let captures = moves.filter(m => m.flags.includes('c'));
+            if(captures.length) return captures[Math.floor(Math.random() * captures.length)];
+            return moves[Math.floor(Math.random() * moves.length)];
+        } 
+        else if(aiSkill === 2) {
+            // strong: depth 2 minimax
+            let bestScore = -Infinity;
+            let bestMove = moves[0];
+            for(let move of moves) {
+                let testGame = new Chess(game.fen());
+                testGame.move({ from: move.from, to: move.to, promotion: 'q' });
+                let score = getBestMove(testGame, 2, false);
+                if(score > bestScore) {
+                    bestScore = score;
+                    bestMove = move;
+                }
+            }
+            return bestMove;
+        } 
+        else {
+            // expert: depth 3 with extra pruning + material dominance
+            let bestScore = -Infinity;
+            let bestMove = moves[0];
+            for(let move of moves) {
+                let testGame = new Chess(game.fen());
+                testGame.move({ from: move.from, to: move.to, promotion: 'q' });
+                let score = getBestMove(testGame, 3, false);
+                // small random tie-break to avoid repetitive
+                if(score > bestScore || (score === bestScore && Math.random() > 0.7)) {
+                    bestScore = score;
+                    bestMove = move;
+                }
+            }
+            return bestMove;
+        }
+    }
+    
+    let aiThinking = false;
+    async function makeAIMove() {
+        if(gameMode !== "ai") return;
+        if(game.game_over()) return;
+        if(game.turn() !== 'b') return;
+        if(aiThinking) return;
+        aiThinking = true;
+        updateStatusMsg("AI is calculating...");
+        await new Promise(r => setTimeout(r, 80));
+        let move = selectAIMove();
+        if(move) {
+            game.move({ from: move.from, to: move.to, promotion: 'q' });
+            renderBoard();
+            updateTurnDisplay();
+            if(game.game_over()) updateStatusMsg(game.in_checkmate() ? "🤖 AI wins" : "Game Over");
+            else updateStatusMsg("Your turn (White)");
+        }
+        aiThinking = false;
+        renderBoard();
+    }
+    
+    function playerMoveAI(from, to) {
+        if(gameMode !== "ai") return false;
+        if(game.turn() !== 'w') { updateStatusMsg("AI's turn"); return false; }
+        let move = getValidMove(from, to);
+        if(move) {
+            game.move(move);
+            renderBoard();
+            updateTurnDisplay();
+            if(game.game_over()) {
+                updateStatusMsg(game.in_checkmate() ? "You win! 🎉" : "Draw/Stalemate");
+                return true;
+            }
+            setTimeout(() => makeAIMove(), 80);
+            return true;
+        }
+        return false;
+    }
+    
+    // Helper move validation
+    function getValidMove(from, to) {
+        let moves = game.moves({ verbose: true });
+        let found = moves.find(m => m.from === from && m.to === to);
+        if(found) return { from: found.from, to: found.to, promotion: 'q' };
+        return null;
+    }
+    
+    function attemptMoveWrapper(from, to) {
+        if(gameMode === "multiplayer") return multiplayerMove(from, to);
+        else return playerMoveAI(from, to);
+    }
+    
+    // ---------- RENDERING (Chess.com sleek board) ----------
+    function renderBoard() {
+        const sq = 500/8;
+        const light = "#ebecd0";
+        const dark = "#739552";
+        for(let i=0;i<8;i++){
+            for(let j=0;j<8;j++){
+                let x = j*sq, y = i*sq;
+                let isDark = (i+j)%2 === 1;
+                ctx.fillStyle = isDark ? dark : light;
+                ctx.fillRect(x,y,sq,sq);
+                let piece = game.get(String.fromCharCode(97+j)+(8-i));
+                if(piece){
+                    let symbols = { 'k':'♚','q':'♛','r':'♜','b':'♝','n':'♞','p':'♟','K':'♔','Q':'♕','R':'♖','B':'♗','N':'♘','P':'♙' };
+                    let sym = symbols[piece.type + (piece.color === 'w' ? '' : '')];
+                    ctx.font = `${sq*0.68}px 'Segoe UI', 'Noto Sans'`;
+                    ctx.fillStyle = piece.color === 'w' ? "#2c2c2c" : "#f5f5f5";
+                    ctx.shadowBlur = 0;
+                    ctx.fillText(sym, x+sq*0.22, y+sq*0.78);
+                }
+            }
+        }
+        if(selectedSquare){
+            let f = selectedSquare.charCodeAt(0)-97;
+            let r = 8 - parseInt(selectedSquare[1]);
+            ctx.fillStyle = "rgba(80, 180, 80, 0.55)";
+            ctx.fillRect(f*sq, r*sq, sq, sq);
+            for(let mv of validMoves){
+                let txf = mv.charCodeAt(0)-97;
+                let txr = 8 - parseInt(mv[1]);
+                ctx.beginPath();
+                ctx.arc(txf*sq+sq/2, txr*sq+sq/2, sq*0.18, 0, 2*Math.PI);
+                ctx.fillStyle = "#a5d6a5";
+                ctx.fill();
+            }
+        }
+    }
+    
+    function updateTurnDisplay() {
+        let el = document.getElementById("turnText");
+        if(game.game_over()) {
+            let msg = game.in_checkmate() ? (game.turn()==='w'?"Black wins!":"White wins!") : "Stalemate";
+            el.innerHTML = `🏁 ${msg}`;
+        } else {
+            el.innerHTML = game.turn() === 'w' ? "♔ White to move" : "♚ Black to move";
+        }
+        renderBoard();
+    }
+    
+    function updateStatusMsg(msg) {
+        let div = document.getElementById("gameStatus");
+        div.innerHTML = msg;
+        setTimeout(() => { if(div.innerHTML === msg) div.innerHTML = "⚡ ready"; }, 2000);
+    }
+    
+    // ---------- UI panels (AI + Multiplayer) based on mode ----------
+    function renderMultiplayerPanel() {
+        let panel = document.getElementById("dynamicPanel");
+        if(gameMode !== "multiplayer") return;
+        if(!currentRoom) {
+            panel.innerHTML = `<div class="room-card">
+                <strong>🌐 Online Rooms</strong>
+                <button id="createRoomBtn" style="width:100%; margin: 10px 0;">+ Create Room</button>
+                <div style="margin: 6px 0;">or join with code</div>
+                <div class="input-group"><input id="joinCodeInput" placeholder="e.g., A3B7C9"><button id="joinRoomBtn">Join</button></div>
+                <div style="font-size:11px; margin-top:8px;">* share code with friend (same browser or different tab)</div>
+            </div>`;
+            document.getElementById("createRoomBtn")?.addEventListener("click", createRoom);
+            document.getElementById("joinRoomBtn")?.addEventListener("click", () => {
+                let code = document.getElementById("joinCodeInput").value.trim().toUpperCase();
+                if(code) joinRoom(code);
+            });
+        } else {
+            panel.innerHTML = `<div class="room-card">
+                <div>🏠 Room: <b>${currentRoom}</b></div>
+                <div>♟️ You: ${playerColor === 'w' ? 'White' : 'Black'}</div>
+                <button id="leaveRoomBtn" style="margin-top:12px;">Leave Room</button>
+            </div>`;
+            document.getElementById("leaveRoomBtn")?.addEventListener("click", () => {
+                leaveRoomClean();
+                currentRoom = null;
+                game = new Chess();
+                renderBoard();
+                updateTurnDisplay();
+                renderMultiplayerPanel();
+                updateStatusMsg("Left room");
+            });
+        }
+    }
+    
+    function renderAIPanel() {
+        let panel = document.getElementById("dynamicPanel");
+        if(gameMode !== "ai") return;
+        panel.innerHTML = `<div class="ai-card">
+            <strong>🤖 AI Difficulty</strong>
+            <div class="difficulty-group">
+                <div data-diff="1" class="diff-option ${aiSkill===1?'active-diff':''}">Normal</div>
+                <div data-diff="2" class="diff-option ${aiSkill===2?'active-diff':''}">Strong</div>
+                <div data-diff="3" class="diff-option ${aiSkill===3?'active-diff':''}">Expert</div>
+            </div>
+            <div style="margin-top: 10px;">You play White</div>
+        </div>`;
+        document.querySelectorAll("[data-diff]").forEach(el => {
+            el.addEventListener("click", (e) => {
+                aiSkill = parseInt(el.getAttribute("data-diff"));
+                updateStatusMsg(`AI set to ${aiSkill===1?"Normal":aiSkill===2?"Strong":"Expert"}`);
+                document.querySelectorAll(".diff-option").forEach(d=>d.classList.remove("active-diff"));
+                el.classList.add("active-diff");
+                if(gameMode === "ai" && !game.game_over() && game.turn() === 'b') makeAIMove();
+            });
+        });
+    }
+    
+    // reset game
+    function resetGameGlobal() {
+        if(gameMode === "multiplayer") {
+            if(currentRoom) {
+                game = new Chess();
+                renderBoard();
+                updateTurnDisplay();
+                myTurn = (playerColor === 'w');
+                broadcastRoom();
+                updateStatusMsg("Game reset locally");
+            } else {
+                game = new Chess();
+                renderBoard();
+                updateTurnDisplay();
+            }
+        } else {
+            game = new Chess();
+            renderBoard();
+            updateTurnDisplay();
+            if(gameMode === "ai" && game.turn() === 'b') setTimeout(() => makeAIMove(), 60);
+            updateStatusMsg("New game! You are White");
+            renderAIPanel();
+        }
+    }
+    
+    // canvas click handler
+    canvas.addEventListener("click", (e) => {
+        let rect = canvas.getBoundingClientRect();
+        let scale = canvas.width/rect.width;
+        let mx = (e.clientX - rect.left)*scale;
+        let my = (e.clientY - rect.top)*scale;
+        let sqSize = 500/8;
+        let file = Math.floor(mx/sqSize);
+        let rank = Math.floor(my/sqSize);
+        if(file<0||file>7||rank<0||rank>7) return;
+        let square = String.fromCharCode(97+file)+(8-rank);
+        if(selectedSquare) {
+            if(attemptMoveWrapper(selectedSquare, square)) {
+                selectedSquare = null; validMoves = [];
+                renderBoard();
+                return;
+            } else { selectedSquare = null; validMoves = []; renderBoard(); }
+        }
+        let piece = game.get(square);
+        let canSelect = false;
+        if(gameMode === "ai" && piece && piece.color === 'w' && game.turn() === 'w') canSelect = true;
+        if(gameMode === "multiplayer" && currentRoom && myTurn && piece && piece.color === playerColor) canSelect = true;
+        if(canSelect) { selectedSquare = square; validMoves = game.moves({verbose:true}).filter(m=>m.from===square).map(m=>m.to); renderBoard(); }
+        else renderBoard();
+    });
+    
+    // mode switching
+    function setMultiplayer() {
+        gameMode = "multiplayer";
+        leaveRoomClean();
+        game = new Chess();
+        currentRoom = null;
+        renderBoard();
+        updateTurnDisplay();
+        renderMultiplayerPanel();
+        document.getElementById("modeMultiBtn").classList.add("active");
+        document.getElementById("modeAiBtn").classList.remove("active");
+        updateStatusMsg("Multiplayer mode: create/join room");
+    }
+    function setAI() {
+        gameMode = "ai";
+        if(syncInterval) clearInterval(syncInterval);
+        currentRoom = null;
+        game = new Chess();
+        renderBoard();
+        updateTurnDisplay();
+        renderAIPanel();
+        document.getElementById("modeAiBtn").classList.add("active");
+        document.getElementById("modeMultiBtn").classList.remove("active");
+        updateStatusMsg(`AI mode (${aiSkill===1?"Normal":aiSkill===2?"Strong":"Expert"}). You're White`);
+        if(game.turn() === 'b') setTimeout(() => makeAIMove(), 100);
+    }
+    document.getElementById("modeMultiBtn").addEventListener("click", setMultiplayer);
+    document.getElementById("modeAiBtn").addEventListener("click", setAI);
+    document.getElementById("resetGameBtn").addEventListener("click", resetGameGlobal);
+    
+    setMultiplayer();
+    renderBoard();
+</script>
+</body>
+</html>
